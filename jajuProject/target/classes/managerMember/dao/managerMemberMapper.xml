@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="managerMemberSQL">
+ 
+ 
+<!-- selectList - 모든 회원 리스트 가져오기 -->
+<select id="getManagerMember" parameterType="java.util.Map" resultType="member">
+	
+	<if test='sortinSelect == "member_date_desc" '>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_state='0' and member_id !='jajuadmin' order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+	<if test='sortinSelect == "member_date_asc" '>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_state='0' and member_id !='jajuadmin' order by member_date asc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+	<if test='sortinSelect == "member_manner_desc" '>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_state='0' and member_id !='jajuadmin' order by member_manner desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+
+</select>
+
+<!-- 강제탈퇴 눌렀을 경우, 상태는 2로 변경, 이메일만 놔두고 다 0 이나 null로 변경하기 (update)-->
+<update id="managerMemberForm" parameterType="java.util.Map" >
+	update jajumember set member_seq='0',member_name='0', 
+	member_telephone='0',member_sido='0',member_sigungu='0',member_address='0',
+	member_detailAddr='0',member_gender='0',member_manner='0',member_warning='0',member_date=sysdate,
+	member_image='0', member_state='2' where member_id in
+	<foreach collection="array" item="data" open="(" close=")" separator=",">
+		#{data}
+	<!-- ${array[i]} -->
+	</foreach>
+</update>
+
+<!-- 강제탈퇴 눌렀을 경우, 원래 삭제되는 mapper 
+<delete id="managerMemberForm" parameterType="java.util.Map" >
+	delete from jajumember where member_id in 
+	<foreach collection="array" item="data" open="(" close=")" separator=",">
+		#{data}
+	</foreach>
+</delete> -->
+
+<!-- 선택한 회원 활동중지, 상태 0->1으로 변경  -->
+<update id="changeMemberState" parameterType="java.util.Map" >
+	update jajumember set member_state='1' where member_id in
+	<foreach collection="array" item="data" open="(" close=")" separator=",">
+		#{data}
+	<!-- ${array[i]} -->
+	</foreach>
+</update>
+
+<!-- 선택한 회원 활동중지해제, 상태 1->0으로 변경  -->
+<update id="changeBlackMemberStateRollback" parameterType="java.util.Map" >
+	update jajumember set member_state='0' where member_id in
+	<foreach collection="array" item="data" open="(" close=")" separator=",">
+		#{data}
+	<!-- ${array[i]} -->
+	</foreach>
+</update>
+
+<!-- 검색 결과 가져오기. 닉네임, 이메일,  -->
+<select id="getSearchMemberInfo" parameterType="java.util.Map" resultType="member">
+	
+	<if test='searchMode == "member_id" '>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_id like '%'||#{search-text}||'%' and member_state='0' order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+	<if test='searchMode == "member_email"'>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_email like '%'||#{search-text}||'%' and  member_state='0' order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+	<if test='searchMode == "member_id_email"'>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where  member_state='0' and (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+</select>
+
+<!-- 블랙리스트(활동중지 회원) 불러오기 -->
+<select id="getManagerMemberBlack" parameterType="java.util.Map" resultType="member">
+	
+	<if test='sortinSelect == "break_member" '>
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_state='1' order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if>
+	
+ 	<if test='sortinSelect == "delete_member"'>
+ 	
+		select * from 
+		(select rownum rn, tt.* from
+		(select * from jajumember where member_state='2' order by member_date desc)tt)
+		where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+	</if> 
+	
+</select>
+
+
+<!-- 회원리스트 paging 처리 -->
+<select id="getMemberTotalA" parameterType="String" resultType="int">
+	select count(*) from jajumember where member_state='0' and member_id != 'jajuadmin'
+</select>
+<!-- 검색 paging 처리  -->
+<select id="getSearchTotalA" parameterType="String" resultType="int">
+	<if test='searchMode == "member_id" '>
+		select count(*) from jajumember where member_id like '%'||#{search-text}||'%' and member_state='0'
+	</if>	
+	<if test='searchMode == "member_email"'>
+		select count(*) from jajumember where member_email like '%'||#{search-text}||'%' and member_state='0'
+	</if>
+	<if test='searchMode == "member_id_email"'>
+		select count(*) from jajumember where (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') and member_state='0'
+	</if>
+</select> 
+
+<!-- 블랙회원리스트 검색  결과 가져오기. 닉네임, 이메일,  -->
+<select id="getSearchManagerMemberBlack" parameterType="java.util.Map" resultType="member">
+	<if test='sortinSelect == "break_member" '>
+		<if test='searchMode == "member_id" '>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where member_id like '%'||#{search-text}||'%' and member_state='1' order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+		
+		<if test='searchMode == "member_email"'>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where member_email like '%'||#{search-text}||'%' and  member_state='1' order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+		
+		<if test='searchMode == "member_id_email"'>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where  member_state='1' and (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+	</if>
+	<if test='sortinSelect == "delete_member" '>		
+		<if test='searchMode == "member_id" '>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where member_id like '%'||#{search-text}||'%' and member_state='2' order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+		
+		<if test='searchMode == "member_email"'>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where member_email like '%'||#{search-text}||'%' and  member_state='2' order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+		
+		<if test='searchMode == "member_id_email"'>
+			select * from 
+			(select rownum rn, tt.* from
+			(select * from jajumember where  member_state='2' and (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') order by member_date desc)tt)
+			where rn &gt;=#{startNum} and rn &lt;=#{endNum}
+		</if>
+	</if>
+</select>
+
+<!-- 블랙회원리스트 검색 paging 처리  -->
+<select id="getBlackSearchTotalA" parameterType="String" resultType="int">
+	<if test='sortinSelect == "break_member" '>
+		<if test='searchMode == "member_id"'>
+			select count(*) from jajumember where member_id like '%'||#{search-text}||'%' and member_state='1'
+		</if>	
+		<if test='searchMode == "member_email"'>
+			select count(*) from jajumember where member_email like '%'||#{search-text}||'%' and member_state='1'
+		</if>
+		<if test='searchMode == "member_id_email"'>
+			select count(*) from jajumember where (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') and member_state='1'
+		</if>
+	</if>
+	
+	<if test='sortinSelect == "delete_member" '>	
+		<if test='searchMode == "member_id" '>
+			select count(*) from jajumember where member_id like '%'||#{search-text}||'%' and member_state='2'
+		</if>	
+		<if test='searchMode == "member_email"'> 
+			select count(*) from jajumember where member_email like '%'||#{search-text}||'%' and member_state='2'
+		</if>
+		<if test='searchMode == "member_id_email"'>
+			select count(*) from jajumember where (member_id like '%'||#{search-text}||'%' or member_email like '%'||#{search-text}||'%') and member_state='2'
+		</if>
+	</if>
+</select> 
+
+<!-- 블랙회원리스트 paging 처리 -->
+<select id="getMemberBlackTotalA" parameterType="String" resultType="int">
+	
+	<if test='sortinSelect == "break_member" '>
+		select count(*) from jajumember where member_state='1'
+	</if>
+	<if test='sortinSelect == "delete_member" '>	
+		select count(*) from jajumember where member_state='2'
+	</if>
+	
+</select>
+
+<!-- 차트  mapper 카테고리 -->
+<select id="getMemberCategory" resultType="managerMember.bean.ManagerMainDTO">
+		select * from 
+		(select rownum rn, tt.* from
+		(select sale_category, count(*) as countCategory
+		from sale_board group by sale_category order by count(*) desc)tt)
+		where rn &gt;='1' and rn &lt;='5'
+</select> 
+
+<!-- 판매 게시글 수 차트 -->
+<select id="getSaleAvg" resultType="managerMember.bean.ManagerMainDTO">
+	SELECT
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-7,'yyyy-MM-dd')) as dd7,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-6,'yyyy-MM-dd')) as dd6,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-5,'yyyy-MM-dd')) as dd5,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-4,'yyyy-MM-dd')) as dd4,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-3,'yyyy-MM-dd')) as dd3,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-2,'yyyy-MM-dd')) as dd2,
+   (SELECT COUNT(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-1,'yyyy-MM-dd')) as dd1,
+    (to_char(sysdate-7,'yyyy-MM-dd')) as d7,
+    (to_char(sysdate-6,'yyyy-MM-dd')) as d6,
+    (to_char(sysdate-5,'yyyy-MM-dd')) as d5,
+    (to_char(sysdate-4,'yyyy-MM-dd')) as d4,
+    (to_char(sysdate-3,'yyyy-MM-dd')) as d3,
+    (to_char(sysdate-2,'yyyy-MM-dd')) as d2,
+    (to_char(sysdate-1,'yyyy-MM-dd')) as d1
+    FROM DUAL
+</select> 
+
+<!-- 관심지역 차트 -->
+<select id="getLocationInfo" resultType="managerMember.bean.ManagerMainDTO">
+		select * from 
+    	(select rownum rn, tt.* from
+    	(SELECT Most_Regist, COUNT(Most_Regist)as COUNT FROM (
+		select location2_addr1||''||location2_addr2 as Most_Regist from location
+		where location2_addr1||''||location2_addr2 is not null
+		UNION All
+		select location3_addr1||''||location3_addr2 as Most_Regist from location
+		where location3_addr1||''||location3_addr2 is not null
+		)group by Most_Regist order by COUNT(Most_Regist) desc)tt)
+      	where rn &gt;='1' and rn &lt;='5'
+</select> 
+
+
+<!-- ====MAINCHART COUNT(*) NUMBER==== 오늘날짜-->
+<!-- 1:1문의 처리중 인 게시글 수 -->
+<select id="getManagerInquireCount" resultType="int">
+	select count(*) from inquiryboard where inquiry_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = to_char(sysdate,'yyyy-MM-dd')
+<!-- 신고 게시판 처리중 인 게시글 수  -->
+</select>
+<select id="getManagerReportCount" resultType="int">
+	select count(*) from memberreport where report_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = to_char(sysdate,'yyyy-MM-dd')
+</select>
+<!-- 신고 회원 가입 멤버 수 (당일) -->
+<select id="getManagerMemberCount" resultType="int">
+	select count(*) from jajumember where to_char(member_date,'yyyy-mm-dd') = to_char(sysdate,'yyyy-MM-dd')
+</select>
+<!-- 판매 게시글 수 (당일) -->
+<select id="getManagerSaleReportCount" resultType="int">
+	select count(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate,'yyyy-MM-dd')
+</select>
+
+
+<!-- ====MAINCHART PREV COUNT(*) NUMBER==== 어제날짜  -->
+<select id="getPrevInquireCount" resultType="int">
+	select count(*) from inquiryboard where inquiry_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = to_char(sysdate-1,'yyyy-MM-dd')
+</select>
+<select id="getPrevReportCount" resultType="int">
+	select count(*) from memberreport where report_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = to_char(sysdate-1,'yyyy-MM-dd')
+</select>
+<select id="getPrevMemberCount" resultType="int">
+	select count(*) from jajumember where to_char(member_date,'yyyy-mm-dd') = to_char(sysdate-1,'yyyy-MM-dd')
+</select>
+<select id="getPrevSaleReportCount" resultType="int">
+	select count(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = to_char(sysdate-1,'yyyy-MM-dd')
+</select>
+
+<!-- ====MAINCHART DATEPICKER COUNT(*) NUMBER==== 달력선택날짜  -->
+<select id="getInquirePickerCount" parameterType="java.util.Map" resultType="int">
+	select count(*) from inquiryboard where inquiry_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = #{date}
+</select>
+<select id="getReportPickerCount" parameterType="java.util.Map"  resultType="int">
+	select count(*) from memberreport where report_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = #{date}
+</select>
+<select id="getNewMemberPickerCount" parameterType="java.util.Map" resultType="int">
+	select count(*) from jajumember where to_char(member_date,'yyyy-mm-dd') = #{date}
+</select>
+<select id="getSaleReportPickerCount" parameterType="java.util.Map" resultType="int">
+	select count(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = #{date}
+</select>
+
+<!--  ====  달력 페이지 카운트 넘버 가져오기 ==== -->
+<select id="getCalenderInfo" parameterType="java.util.Map" resultType="int">
+	select count(*) as count from inquiryboard where inquiry_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = #{date}
+	union all
+	select count(*) from memberreport where report_state='처리중' and to_char(logtime, 'yyyy-mm-dd') = #{date}
+	union all
+	select count(*) from jajumember where to_char(member_date,'yyyy-mm-dd') = #{date}
+	union all
+	select count(*) from sale_board where to_char(sale_date,'yyyy-mm-dd') = #{date}
+</select>
+
+</mapper>

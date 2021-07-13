@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="managerReportSQL">
+ 
+ 	<select id="getManagerReportList" parameterType="java.util.Map" resultType="report">
+		select * from
+		 		(select rownum rn, tt.* from
+		 		(select * from memberreport order by report_seq desc)tt
+		 		)where rn &gt;= #{startNum} and rn &lt;= #{endNum}
+	</select>
+	
+	<select id="getReportTotalA" resultType="int">
+		select count(*) as count from memberreport
+	</select>
+	
+	<!-- 검색 -->
+	<select id="getReportSearchList" parameterType="java.util.Map" resultType="report">
+		<![CDATA[
+			select * from 
+			(select rownum rn, tt. * from 
+	 		(select * from memberreport where ${itemcd} like '%'||#{keyword}||'%' 
+	 		                     order by report_seq desc)tt
+	 		)where rn >= #{startNum} and rn <= #{endNum}
+		]]>
+	</select>
+	 
+	  <!-- 검색한 총글수 -->
+	<select id="getTotalSearchA" parameterType="java.util.Map" resultType="int">
+		select count(*) from memberreport where ${itemcd} like '%'||#{keyword}||'%'
+	</select>
+	
+	
+	
+	<!-- 글 삭제 check -->
+ 	<delete id="managerReportDelete" parameterType="java.util.Map">
+		
+		delete memberreport where report_seq in 
+		<foreach collection="array" item="data" open="(" close=")" separator=",">
+			#{data}
+			<!-- ${array[i]} -->
+		</foreach>
+		
+	</delete>
+ 	<update id="managerReportDelete2" parameterType="java.util.Map">
+		
+		update sale_board set sale_hide = 'on' where sale_seq in 
+		<foreach collection="array" item="data" open="(" close=")" separator=",">
+			#{data}
+			<!-- ${array[i]} -->
+		</foreach>
+		
+	</update>
+	
+	<select id="getReportOne" parameterType="String" resultType="report">
+		select * from memberreport where report_seq=${report_seq}
+	</select>
+	
+
+	<!-- 댓글 -->
+	
+	<!-- 댓글입력 (보이기) -->
+	 <insert id="commentWriteShow" parameterType="java.util.Map">
+	 	begin
+		insert into reportcomment values (${report_seq},
+										 seq_reportcomment.nextval,
+								 		 #{comment_content},
+								 		 sysdate);
+	 	
+	 	update sale_board set sale_hide = 'on' where sale_seq = ${sale_seq};
+	 	
+	 	update memberreport set report_state='처리완료' where report_seq=#{report_seq};
+	 	end;
+	 </insert>
+
+
+	 <!-- 댓글입력 (숨기기) -->
+	 <insert id="commentWriteHide" parameterType="java.util.Map">
+	 	begin
+		insert into reportcomment values (${report_seq},
+										 seq_reportcomment.nextval,
+								 		 #{comment_content},
+								 		 sysdate);
+								 		 
+	 	update memberreport set report_state='처리완료' where report_seq=#{report_seq};
+	 	
+	 	update jajumember set member_warning=member_warning+1 where member_id=#{sale_id};
+
+		update memberreport set report_subject='삭제 처리가 완료된 글입니다' where sale_seq=#{sale_seq};
+
+		delete sale_board where sale_seq=${sale_seq};
+          
+	 	delete sale_board_comment where sale_seq=${sale_seq};
+          
+        delete scrap where sale_seq=${sale_seq};
+          
+        delete message where sale_seq=${sale_seq};
+	 	end;
+	 </insert>
+	 
+	 
+	 
+	 <!-- 목록 -->
+	 <select id="getCommentList" parameterType="int" resultType="comment">
+	 	select * from reportcomment where report_seq=#{report_seq}
+	 </select>
+	 
+	 <!-- 댓글 불러오기 -->
+	 <select id="getComment" parameterType="int" resultType="comment">
+ 		select * from reportcomment where comment_seq=#{comment_seq}
+ 	</select>
+	 
+	 <!-- 수정 -->
+	 <update id="commentModify" parameterType="comment">
+		update reportcomment set comment_content=#{comment_content},
+						 		 logtime=sysdate where comment_seq=#{comment_seq}
+	 </update>
+	 
+	 <!-- 삭제 -->
+	 <delete id="commentDelete" parameterType="java.util.Map">
+		begin
+	 	delete from reportcomment where comment_seq=#{comment_seq};
+	 	
+	 	update memberreport set report_state='처리중' where report_seq=#{report_seq};
+	 	end;
+	 </delete>
+	
+ </mapper>

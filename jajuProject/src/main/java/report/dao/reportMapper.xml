@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="memberreportSQL">
+	
+	<!-- id로 name값 가져오기 -->
+	<select id="getMemberName" parameterType="String" resultType="member">
+		select * from jajuMember where member_id=#{member_id}
+	</select>
+	
+	<!-- 글쓰기 -->
+ 	<insert id="reportWrite" parameterType="report">
+	 	begin
+	 		insert into memberreport values (#{sale_seq},
+		 							   #{sale_id}, 							
+		 							   seq_memberreport.nextval,
+		 							   #{report_id},
+		 							   #{report_name},
+		 							   #{reportType},
+		 							   #{report_tal},
+		 							   #{report_subject},
+		 							   #{report_content},
+		 							   #{report_image1},
+		 							   #{report_image2},
+		 							   #{report_image3},
+		 							   #{report_state},
+		 							   sysdate);
+		 							   
+		 	update sale_board set sale_hide = 'off' where sale_seq = ${sale_seq};
+		 end;
+	 	</insert>
+ 	
+ 	<!-- 목록 --><!-- 페이징 처리 -->
+ 	<select id="getReportList" parameterType="java.util.Map" resultType="report">
+	 	<if test='report_id == "jajuadmin"'>
+	 		select * from
+	 		(select rownum rn, tt.* from
+	 		(select * from memberreport order by report_seq desc)tt
+	 		)where rn &gt;= #{startNum} and rn &lt;= #{endNum}
+	 	</if>
+	 	<if test='report_id != "jajuadmin"'>
+	 		select * from
+	 		(select rownum rn, tt.* from
+	 		(select * from memberreport where report_id=#{report_id} order by report_seq desc)tt
+	 		)where rn &gt;= #{startNum} and rn &lt;= #{endNum}
+	 	</if>
+ 	</select>
+ 	
+ 	<select id="getIdTotalA" resultType="int">
+	 	<!-- 총 글수 -->
+	 	<if test='report_id == "jajuadmin"'>
+	 		select count(*) from memberreport
+	 	</if>
+	 	
+	 	<!-- ID 값의 총 글수 -->
+		 <if test='report_id != "jajuadmin"'>
+	 		select count(*) from memberreport where report_id=#{report_id}
+ 		</if>
+ 	</select>
+ 	
+ 	
+ 	<!-- 수정 -->
+ 	<update id="reportModify" parameterType="report">
+ 		update memberreport set sale_seq=#{sale_seq},
+ 								sale_id=#{sale_id},
+ 								reportType=#{reportType},
+ 								report_tal=#{report_tal},
+ 								report_subject=#{report_subject},
+ 								report_content=#{report_content},
+								report_image1=#{report_image1},
+								report_image2=#{report_image2},
+								report_image3=#{report_image3},
+								logtime=sysdate where report_seq=#{report_seq}
+ 	</update>
+ 	
+ 	<!-- 한 사람글  -->
+ 	<select id="getReport" parameterType="int" resultType="report">
+ 		select * from memberreport join sale_board using(sale_seq) where report_seq=#{report_seq}
+ 	</select>
+ 	
+	 <!-- 글삭제 -->
+	  <delete id="reportDelete" parameterType="java.util.Map">
+	  	begin
+	 		delete from memberreport where report_seq=${report_seq};
+	 		
+	 		update sale_board set sale_hide = 'on' where sale_seq = ${sale_seq};
+	 	end;
+	 </delete>
+	 
+
+	 <!-- 목록 -->
+	 <select id="getCommentList" parameterType="int" resultType="comment">
+	 	select * from reportcomment where report_seq=#{report_seq}
+	 </select>
+	 
+	 <!-- 댓글 불러오기 -->
+	 <select id="getComment" parameterType="int" resultType="comment">
+ 		select * from reportcomment where comment_seq=#{comment_seq}
+ 	</select>
+	 
+	 
+ </mapper>

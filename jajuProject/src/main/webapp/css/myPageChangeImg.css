@@ -1,0 +1,139 @@
+
+@charset "UTF-8";
+/*상단 가로 메뉴*/
+@font-face {
+     font-family: 'S-CoreDream-4Regular';
+     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-4Regular.woff') format('woff');
+     font-weight: normal;
+     font-style: normal;
+}
+#profileFont , .profileFont{
+    letter-spacing: -.05em;
+    color: #4c4c4c;
+    font-size: 17px;
+    font-family: 'S-CoreDream-4Regular';
+   -webkit-text-size-adjust: 100%;
+}
+#subject_{
+	float:left;
+	font-size: 14px;
+	letter-spacing: -.05em;
+	color: #4c4c4c;
+	font-family: 'S-CoreDream-4Regular';
+   -webkit-text-size-adjust: 100%;
+}
+
+
+html {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+#update_btn{
+	height: 30px;
+    width: 125px;
+	background-color: #617aad;
+    color: #fff;
+    border:none;
+    border-radius: 3px;
+    font-family: 'S-CoreDream-4Regular';
+    
+}
+
+
+#profile_name{
+	font-size: 20px;
+	font-weight: 700;
+}
+
+
+#currentPaging {
+	
+	display: inline-block;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ddd;
+    border-left: 1;
+    vertical-align: top;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    line-height: 34px;
+}
+#currentPaging:hover{
+	border: 1px solid #47597e;
+}
+#paging {
+	display: inline-block;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ddd;
+    border-left: 1;
+    vertical-align: top;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    line-height: 34px;
+}
+#paging:hover,#prev_paging:hover,#next_paging:hover{
+	border: 1px solid #47597e;
+}
+#prev_paging{
+    background-image: url(https://res.kurly.com/pc/etc/old/images/common/icon-pagination-prev.png);
+	width: 34px;
+    height: 34px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    vertical-align: top;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    text-indent: -9999px;
+    border: 1px solid #ddd;
+}
+#next_paging{
+    background-image: url(https://res.kurly.com/pc/etc/old/images/common/icon-pagination-next.png);
+    width: 34px;
+    height: 34px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    vertical-align: top;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    text-indent: -9999px;
+    border: 1px solid #ddd;
+}
+#change_state_btn{
+	height: 30px;
+    width: 90px;
+	background-color: #617aad;
+    color: #fff;
+    border:none;
+    border-radius: 3px;
+    float:right;
+}
+#change_state_btn:hover{
+	height: 30px;
+    width: 90px;
+	background-color: #9EB7CD;
+    border:none;
+    border-radius: 3px;
+}
+.deal_wrap{
+	height: 300px;
+}
+.tooltip-text {
+  display: none;
+  position: absolute;
+  max-width: 200px;
+  border: 1px #ddd;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 0.8em;
+  color: #333;
+  background: #f2f2f2;
+  left: 140px;
+}
+.tooltip:hover .tooltip-text {
+  display: block;
+}

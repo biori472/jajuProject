@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="managerQuestionSQL">
+ 
+ 	<insert id="managerQuestionWrite" parameterType="question">
+		insert into question values(seq_question.nextval,
+				 					#{question_subject},
+				 					#{question_content},
+				 					#{questionType},
+				 					#{question_image1},
+				 					#{question_image2},
+				 					#{question_image3},
+				 					sysdate)
+	</insert>
+	
+	<!-- 목록 --><!-- 페이징 처리 -->
+ 	<select id="getManagerQuestionList" parameterType="java.util.Map" resultType="question">
+ 		select * from
+ 		(select rownum rn, tt.* from
+ 		(select * from question order by question_seq desc)tt
+ 		)where rn &gt;= #{startNum} and rn &lt;= #{endNum}
+ 	</select>
+ 	 
+ 	<!-- 총 글수 -->
+ 	<select id="getTotalA" resultType="int">
+ 		select count(*) from question
+ 	</select>
+ 
+ 	<!-- 한사람 글 view 창 띄우기 -->
+ 	<select id="getManagerQuestionView" parameterType="int" resultType="question">
+ 		select * from question where question_seq=#{question_seq}
+ 	</select>
+ 	
+ 	<!--자주하는 질문 1인분의 글 불러오기 -->
+ 	<select id="getManagerQuestionModify" parameterType="int" resultType="question">
+		select * from question where question_seq=#{question_seq}
+	</select>
+
+	<!-- 자주 하는 질문 수정본 저장 -->
+	<update id="managerQuestionModify" parameterType="question" >
+		update question set questionType=#{questionType},
+								  question_subject=#{question_subject}, 
+								  question_content=#{question_content}, 
+								  question_image1 = #{question_image1},
+								  question_image2 = #{question_image2},
+								  question_image3 = #{question_image3},
+								  logtime=sysdate 
+								  where question_seq=#{question_seq} 
+	</update>
+	
+ 	<!-- 자주 하는 질문 삭제 -->
+ 	<delete id="managerQuestionDelete" parameterType="java.util.Map">
+		
+			delete question where question_seq in
+			<foreach collection="array" item="data" open="(" close=")" separator=",">
+				 #{data} 
+			<!-- ${array[i]} -->
+			</foreach>
+			
+	</delete>
+	
+	<!-- 검색 -->
+	<select id="getQuestionSearchList" parameterType="java.util.Map" resultType="question">
+		<![CDATA[
+			select * from 
+			(select rownum rn, tt. * from 
+	 		(select * from question where ${itemcd} like '%'||#{keyword}||'%' 
+	 		                     order by question_seq desc)tt
+	 		)where rn >= #{startNum} and rn <= #{endNum}
+		]]>
+	</select>
+	
+	<!-- 검색한 총글수 -->
+	<select id="getTotalSearchA" parameterType="java.util.Map" resultType="int">
+		select count(*) from question where ${itemcd} like '%'||#{keyword}||'%'
+	</select>
+ 
+ </mapper>
